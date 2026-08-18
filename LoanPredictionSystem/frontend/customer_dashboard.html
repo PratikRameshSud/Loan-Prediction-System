@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Portal - Credit Lending Space</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #2e3bad;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            overflow-x: hidden; /* Prevent offscreen overlays from expanding document width */
+        }
+
+        /* */
+        /* Custom layout rule to completely strip increment/decrement indicators from numeric inputs */
+        input.no-spinner::-webkit-outer-spin-button,
+        input.no-spinner::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input.no-spinner[type=number] {
+            -moz-appearance: textfield; /* Firefox */
+        }
+
+        /* Modern UI Layout Infrastructure */
+        .dashboard-container { 
+            display: flex; 
+            min-height: 100vh; 
+            background: #f8fafc; 
+        }
+        
+        /* Sidebar Design Matching Image Style Exactly */
+        .sidebar { 
+            width: 280px; 
+            background: #192231;
+            color: white; 
+            padding: 40px 24px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 35px; 
+            position: fixed; 
+            height: 100vh;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        
+        .sidebar-brand { 
+            font-size: 24px; 
+            font-weight: 800; 
+            letter-spacing: -0.75px; 
+            color: white;
+        }
+        
+        .sidebar-menu { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            list-style: none; 
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+        
+        .menu-item a { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            color: #94a3b8; 
+            text-decoration: none; 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            font-size: 16px;
+            transition: all 0.2s ease; 
+            cursor: pointer; 
+        }
+        
+        .menu-item.active a { 
+            color: white; 
+            background: rgba(255, 255, 255, 0.08); 
+        }
+        
+        .menu-item a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.04);
+        }
+        
+        /* Main Workspace Content Area */
+        .main-content { 
+            flex: 1; 
+            padding: 45px 50px; 
+            margin-left: 280px; 
+            min-height: 100vh; 
+        }
+        
+        .dashboard-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 35px; 
+        }
+        
+        .dashboard-header h2 {
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Top Right Customer Account Badge */
+        .customer-badge {
+            background: white;
+            padding: 12px 22px;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Top Right AI Interactive Trigger Button */
+        .ai-trigger-badge {
+            background: linear-gradient(135deg, #3b82f6, var(--primary));
+            color: white;
+            padding: 12px 22px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .ai-trigger-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        /* Slide-out AI Panel Layout (Corrected to unlock pointer clicks when closed) */
+        .ai-chat-panel {
+            position: fixed;
+            right: -380px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.05);
+            border-left: 1px solid var(--border-color);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+            pointer-events: none; /* Ignore pointer inputs when offscreen */
+            visibility: hidden; /* Hide entirely when offscreen to resolve focus blocks */
+        }
+        .ai-chat-panel.open {
+            right: 0;
+            pointer-events: auto; /* Active triggers */
+            visibility: visible;
+        }
+        .ai-panel-header {
+            padding: 24px;
+            background: #192231;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ai-panel-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+        .chat-bubble.ai { background: white; color: var(--text-main); border: 1px solid var(--border-color); align-self: flex-start; }
+        .chat-bubble.user { background: var(--primary); color: white; align-self: flex-end; }
+        
+        .ai-panel-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+        }
+        .ai-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            outline: none;
+            pointer-events: auto !important;
+        }
+        .ai-send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Interactive Panel Cards */
+        .panel-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 35px; 
+            box-shadow: 0 10px 25px rgba(50,50,93,0.02); 
+            margin-bottom: 30px; 
+            border: 1px solid rgba(227, 232, 238, 0.8);
+            display: none; 
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .panel-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 0;
+        }
+        
+        .panel-card.active-panel { 
+            display: block; 
+        }
+
+        /* Essential KPI Summary Cards Grid */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .kpi-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Form Layout Elements (Enhanced with forced pointer event permissions) */
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            width: 100%;
+            font-family: inherit;
+            pointer-events: auto !important; /* Ensure input fields are always clickable */
+            position: relative;
+            z-index: 5;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 59, 173, 0.1);
+        }
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            width: auto;
+            position: relative;
+            z-index: 5;
+        }
+        .btn-submit:hover { 
+            background: #1e2896; 
+        }
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* Grid Framework for Settings and Profile Setup */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* Settings Card Sub-Layout Modules */
+        .settings-section-card {
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 25px;
+            background: #ffffff;
+        }
+        .settings-section-card h4 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        /* Profile Picture Component */
+        .profile-picture-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--text-sub);
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        .avatar-preview i {
+            position: absolute;
+        }
+        .btn-avatar-upload {
+            background: #f1f5f9;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-avatar-upload:hover {
+            background: #e2e8f0;
+        }
+
+        /* Real Switch Toggles */
+        .preference-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .preference-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .preference-info h5 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .preference-info p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Document Upload Visual Box */
+        .upload-dropzone {
+            border: 2px dashed #cbd5e1;
+            padding: 40px;
+            text-align: center;
+            border-radius: 12px;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .upload-dropzone:hover {
+            border-color: var(--primary);
+            background: #f1f5f9;
+        }
+
+        /* Status Pipeline Container & Pipeline Items */
+        .pipeline-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .pipeline-item {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-pending { background: #fffbeb; color: #d97706; border: 1px solid #fef3c7; }
+        .status-approved { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+        .status-rejected { background: #fef2f2; color: #dc2626; border: 1px solid #fee2e2; }
+
+        /* Table Design */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { background: #f8fafc; padding: 14px 20px; font-size: 13px; font-weight: 700; color: var(--text-sub); border-bottom: 1px solid var(--border-color); text-transform: uppercase; }
+        .data-table td { padding: 18px 20px; font-size: 14px; color: var(--text-main); border-bottom: 1px solid var(--border-color); }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- -->
+        <!-- Sidebar Navigation Area (Dynamic Name replaces "CustomerSuite" as shown in image_889d07.png) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="customer-name-bind">John Doe</span><span style="color:#38bdf8">.</span>
+            </div>
+            <ul class="sidebar-menu" style="display: flex; flex-direction: column; height: calc(100% - 40px);">
+                <li class="menu-item active" data-target="profile"><a><i class="fas fa-th-large"></i> Profile Overview</a></li>
+                <li class="menu-item" data-target="apply"><a><i class="fas fa-paper-plane"></i> Apply for Loan</a></li>
+                <li class="menu-item" data-target="upload"><a><i class="fas fa-folder"></i> Upload Documents</a></li>
+                <li class="menu-item" data-target="status"><a><i class="fas fa-clock"></i> Loan Status</a></li>
+                <li class="menu-item" data-target="notifications"><a><i class="fas fa-bell"></i> Notifications</a></li>
+                <li class="menu-item" data-target="history"><a><i class="fas fa-history"></i> Loan History</a></li>
+                <li class="menu-item" data-target="settings"><a><i class="fas fa-sliders-h"></i> Settings</a></li>
+                
+                <li style="margin-top: auto;">
+                    <a href="login.html" style="color:#f87171; display: flex; align-items: center; gap: 16px; padding: 14px 16px; text-decoration: none; font-weight: 600; font-size: 16px;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Dynamic Display Workspace -->
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="current-panel-title">Profile Overview</h2>
+                    <p style="color: var(--text-sub); font-size: 15px; margin-top: 4px;" id="current-panel-desc">Manage your core portfolio, asset mappings, and overview metrics.</p>
+                </div>
+                <div class="header-actions">
+                    <!-- Top Right Customer Account Badge (Dynamically populated with Name) -->
+                    <div class="customer-badge">
+                        <i class="far fa-user-circle" style="font-size: 18px; color: var(--primary);"></i> 
+                        <span class="customer-name-bind">John Doe</span>
+                    </div>
+                    <!-- Top Right AI Assistant Badge Button -->
+                    <button class="ai-trigger-badge" onclick="toggleAiPanel()">
+                        <i class="fas fa-robot"></i> <span>Ask AI Assistant</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- -->
+            <!-- 1. PROFILE OVERVIEW PANEL (Showcases high-importance fields) -->
+            <div class="panel-card active-panel" id="profile">
+                <h3><i class="fas fa-id-badge" style="color:var(--primary)"></i> Account Portfolio Status</h3>
+                <p style="font-size:15px; color:var(--text-sub); margin-bottom: 25px;">Welcome back, <span class="customer-name-bind">John Doe</span>. Review your risk clearance benchmarks and portfolio mappings below.</p>
+                
+                <div class="profile-grid">
+                    <!-- KPI Item 1 -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fas fa-bolt"></i></div>
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-sub); display: block; font-weight: 600;">PRE-APPROVED CAP</span>
+                            <strong style="font-size: 18px; color: var(--text-main);">₹50,000</strong>
+                        </div>
+                    </div>
+                    <!-- KPI Item 2 -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: #f0fdf4; color: var(--success);"><i class="fas fa-shield-alt"></i></div>
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-sub); display: block; font-weight: 600;">COMPLIANCE VERIFIED</span>
+                            <strong style="font-size: 18px; color: var(--success);">Cleared</strong>
+                        </div>
+                    </div>
+                    <!-- KPI Item 3 -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: #fffbeb; color: var(--warning);"><i class="fas fa-sync-alt"></i></div>
+                        <div>
+                            <span style="font-size: 12px; color: var(--text-sub); display: block; font-weight: 600;">ACTIVE PIPELINES</span>
+                            <strong style="font-size: 18px; color: var(--text-main);">1 Application</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. APPLY FOR LOAN PANEL (Overridden numeric inputs to type cleanly without spinners) -->
+            <div class="panel-card" id="apply">
+                <h3><i class="fas fa-paper-plane" style="color:var(--primary)"></i> New Credit Application Form</h3>
+                <form style="max-width: 600px;" onsubmit="event.preventDefault(); showToast('Application portfolio submitted successfully!');">
+                    <div class="form-group">
+                        <label>Desired Loan Amount (₹)</label>
+                        <!-- Class 'no-spinner' hides browser desktop spinner triggers completely -->
+                        <input type="number" class="no-spinner" placeholder="e.g. 25000" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Loan Term / Duration</label>
+                        <select required>
+                            <option value="12">12 Months (1 Year)</option>
+                            <option value="24">24 Months (2 Years)</option>
+                            <option value="36" selected>36 Months (3 Years)</option>
+                            <option value="60">60 Months (5 Years)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Loan Purpose</label>
+                        <select>
+                            <option>Commercial Development</option>
+                            <option>Home Renovation</option>
+                            <option>Debt Consolidation</option>
+                            <option>Other / Personal</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Employment Status</label>
+                        <select required>
+                            <option>Full-Time Salaried</option>
+                            <option>Self-Employed / Business Owner</option>
+                            <option>Contract / Freelance</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Estimated Annual Income (₹)</label>
+                        <!-- Class 'no-spinner' hides browser desktop spinner triggers completely -->
+                        <input type="number" class="no-spinner" placeholder="e.g. 75000" required>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Submit Application Portfolio</button>
+                </form>
+            </div>
+
+            <!-- 3. UPLOAD DOCUMENTS PANEL -->
+            <div class="panel-card" id="upload">
+                <h3><i class="fas fa-folder" style="color:var(--primary)"></i> Underwriting Verification Vault</h3>
+                <p style="color:var(--text-sub); margin-bottom: 20px;">Upload identification verification data or income ledger transcripts to clear process checks.</p>
+                
+                <div class="upload-dropzone" onclick="showToast('File browser directory simulation triggered.');">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+                    <p style="font-weight:700; color:var(--text-main); margin:5px 0;">Drag & drop verification files here</p>
+                    <p style="font-size:13px; color:var(--text-sub);">Supports PDF, PNG, JPG up to 10MB sizes</p>
+                </div>
+            </div>
+
+            <!-- 4. LOAN STATUS PANEL (Renders exact layout matching image_887ea4.png) -->
+            <div class="panel-card" id="status">
+                <h3><i class="fas fa-clock" style="color:var(--primary)"></i> Direct Processing Pipeline</h3>
+                <div class="pipeline-container">
+                    <div class="pipeline-item">
+                        <div>
+                            <strong style="display:block; font-size:16px;">#LN-9920 Development Loan</strong>
+                            <span style="font-size:13px; color:var(--text-sub);">Submitted 2 days ago</span>
+                        </div>
+                        <span class="status-badge status-pending"><i class="fas fa-hourglass-half"></i> Underwriting Review</span>
+                    </div>
+
+                    <div class="pipeline-item">
+                        <div>
+                            <strong style="display:block; font-size:16px;">#LN-9412 Home Renovation Asset</strong>
+                            <span style="font-size:13px; color:var(--text-sub);">Submitted 1 week ago</span>
+                        </div>
+                        <span class="status-badge status-approved"><i class="fas fa-check-circle"></i> Loan Approved</span>
+                    </div>
+
+                    <div class="pipeline-item">
+                        <div>
+                            <strong style="display:block; font-size:16px;">#LN-8840 Micro Personal Capital</strong>
+                            <span style="font-size:13px; color:var(--text-sub);">Submitted 3 weeks ago</span>
+                        </div>
+                        <span class="status-badge status-rejected"><i class="fas fa-times-circle"></i> Application Rejected</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. NOTIFICATIONS PANEL -->
+            <div class="panel-card" id="notifications">
+                <h3><i class="fas fa-bell" style="color:var(--primary)"></i> System Update Center</h3>
+                <div style="background:#f8fafc; padding:15px 20px; border-radius:10px; border:1px solid var(--border-color);">
+                    <p style="margin:0; font-size:14px; color:var(--text-main);"><strong>Account Alert:</strong> Your identity documents are successfully verified by the compliance engine.</p>
+                </div>
+            </div>
+
+            <!-- 6. LOAN HISTORY PANEL -->
+            <div class="panel-card" id="history">
+                <h3><i class="fas fa-history" style="color:var(--primary)"></i> Archival Accounts Allocation Log</h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Application ID</th><th>Loan Purpose</th><th>Amount</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#LN-8104</td>
+                                <td>Personal Debt Cover</td>
+                                <td>₹12,000</td>
+                                <td><span class="status-badge status-approved" style="padding:4px 12px; font-size:12px;"><i class="fas fa-check-circle"></i> Settled / Closed</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 7. HIGH-FIDELITY COMPREHENSIVE SETTINGS PANEL -->
+            <div class="panel-card" id="settings">
+                <h3><i class="fas fa-sliders-h" style="color:var(--primary)"></i> Account & Security Settings</h3>
+                <p style="color:var(--text-sub); margin-bottom: 30px; font-size: 15px;">Configure your authentication thresholds, update legal descriptors, and change system notice layers.</p>
+                
+                <!-- Section 1: Edit Profile details -->
+                <div class="settings-section-card">
+                    <h4><i class="far fa-user" style="color: var(--primary);"></i> Personal Profile Configuration</h4>
+                    
+                    <div class="profile-picture-container">
+                        <div class="avatar-preview">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div>
+                            <button class="btn-avatar-upload" onclick="showToast('Upload new avatar simulation triggered.');">Change Profile Avatar</button>
+                            <p style="margin: 6px 0 0 0; font-size: 11px; color: var(--text-sub);">JPG, GIF or PNG. Max size of 800K</p>
+                        </div>
+                    </div>
+
+                    <form id="profileForm">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Legal Full Name</label>
+                                <input type="text" id="settingFullName" value="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Correspondence Email</label>
+                                <input type="email" value="john.doe@example.com" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Registered Phone Number</label>
+                                <input type="tel" value="+1 (555) 019-2831" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Primary Mailing Address</label>
+                                <input type="text" value="1208 Gateway Parkway, Suite 100, Austin TX" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit" style="margin-top: 10px;">Save Profile Details</button>
+                    </form>
+                </div>
+
+                <!-- Section 2: Security & Password Configurations -->
+                <div class="settings-section-card">
+                    <h4><i class="fas fa-shield-alt" style="color: var(--primary);"></i> Security & Key Management</h4>
+                    
+                    <form onsubmit="event.preventDefault(); showToast('Security configurations updated.');">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Current Core Password</label>
+                                <input type="password" placeholder="••••••••" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Secure Key / Password</label>
+                                <input type="password" placeholder="Min. 8 characters" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Toggle Row inside Security -->
+                        <div class="preference-row" style="margin-bottom: 20px; border-bottom: none;">
+                            <div class="preference-info">
+                                <h5>Two-Factor Authentication (2FA)</h5>
+                                <p>Mandate structural biometric or authenticator codes on entry.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="2faToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit">Update Password Configuration</button>
+                    </form>
+                </div>
+
+                <!-- Section 3: Preference Toggles -->
+                <div class="settings-section-card">
+                    <h4><i class="far fa-bell" style="color: var(--primary);"></i> Automated Notification Routing</h4>
+                    <p style="color:var(--text-sub); margin-bottom: 20px; font-size: 13px;">Manage standard communication structures routed out of pipeline processes.</p>
+                    
+                    <div class="preference-row">
+                        <div class="preference-info">
+                            <h5>Email Notifications on status changes</h5>
+                            <p>Send legal records if an underwriter verifies, approves, or rejects active loan structures.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="preference-row">
+                        <div class="preference-info">
+                            <h5>Real-time SMS Security Alerts</h5>
+                            <p>Dispatch prompt mobile alerts for high-value requests or password modifications.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="preference-row">
+                        <div class="preference-info">
+                            <h5>Monthly Credit Limit Analytics Reports</h5>
+                            <p>Receive pre-approved cap indexing and debt valuation metrics summaries.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI SLIDE-OUT PANEL COMPONENT -->
+    <div class="ai-chat-panel" id="aiPanel">
+        <div class="ai-panel-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-robot" style="color:#38bdf8; font-size:20px;"></i>
+                <div>
+                    <h4 style="margin:0; font-size:16px;">AI Support Portal</h4>
+                    <span style="font-size:11px; color:#94a3b8;">Online and ready</span>
+                </div>
+            </div>
+            <button onclick="toggleAiPanel()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:18px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ai-panel-messages" id="chatContainer">
+            <div class="chat-bubble ai">Hello! I am your AI Suite assistant. How can I help you with your configurations, document audits, or loan applications today?</div>
+        </div>
+        <div class="ai-panel-footer">
+            <input type="text" class="ai-input" id="aiInput" placeholder="Ask anything about your loan...">
+            <button class="ai-send-btn" onclick="sendAiMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- SPA UI View Orchestration Router Script -->
+    <script>
+        // ── API base path ─────────────────────────────────────────────────
+        const API = window.location.origin + window.location.pathname.replace(/\/frontend\/.*$/, '') + '/backend/api';
+        let csrfToken = '';
+        let currentUser = {};
+
+        // ── Boot: fetch CSRF + profile on page load ───────────────────────
+        async function boot() {
+            try {
+                const [csrfRes, profileRes] = await Promise.all([
+                    fetch(`${API}/auth/csrf.php`,      { credentials: 'same-origin' }),
+                    fetch(`${API}/user/profile.php`,   { credentials: 'same-origin' }),
+                ]);
+
+                const csrfData    = await csrfRes.json();
+                const profileData = await profileRes.json();
+
+                if (!profileData.success) {
+                    // Not logged in — redirect to login
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                if (csrfData.success) csrfToken = csrfData.data.csrf_token;
+
+                currentUser = profileData.data.user;
+                applyUserData(currentUser);
+
+                // Load default panels
+                loadStatus();
+                loadNotifications();
+                loadHistory();
+            } catch (err) {
+                console.error('Boot error:', err);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ── Populate name/email everywhere ────────────────────────────────
+        function applyUserData(user) {
+            document.querySelectorAll('.customer-name-bind').forEach(el => {
+                el.textContent = user.fullname;
+            });
+            // Pre-fill settings form
+            const f = document.getElementById('settingFullName');
+            if (f) f.value = user.fullname;
+            const eml = document.querySelector('#profileForm input[type=email]');
+            if (eml) eml.value = user.email;
+            const ph = document.querySelector('#profileForm input[type=tel]');
+            if (ph) ph.value = user.phone || '';
+            const addr = document.querySelector('#profileForm input[type=text][placeholder*="1208"]') ||
+                         document.querySelectorAll('#profileForm .form-group input')[3];
+            if (addr) addr.value = user.address || '';
+
+            // KPI: credit score → pre-approved cap (rough estimate: credit_score * 50)
+            const cap = document.querySelector('.kpi-card strong');
+            if (cap && user.income) cap.textContent = '$' + Number(user.income).toLocaleString();
+        }
+
+        // ── Load Loan Status panel ────────────────────────────────────────
+        async function loadStatus() {
+            try {
+                const res  = await fetch(`${API}/loans/status.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                const container = document.querySelector('#status .pipeline-container');
+                if (!container) return;
+                container.innerHTML = '';
+
+                const loans = data.data.loans;
+                if (!loans.length) {
+                    container.innerHTML = '<p style="color:var(--text-sub); padding:20px 0;">No loan applications yet.</p>';
+                    return;
+                }
+
+                loans.forEach(loan => {
+                    const badgeClass = {
+                        pending:      'status-pending',
+                        under_review: 'status-pending',
+                        approved:     'status-approved',
+                        rejected:     'status-rejected',
+                        disbursed:    'status-approved',
+                        closed:       'status-approved',
+                    }[loan.status] || 'status-pending';
+
+                    const badgeText = {
+                        pending:      'Under Review',
+                        under_review: 'Under Review',
+                        approved:     'Approved',
+                        rejected:     'Rejected',
+                        disbursed:    'Disbursed',
+                        closed:       'Closed',
+                    }[loan.status] || loan.status;
+
+                    const dateStr = new Date(loan.created_at).toLocaleDateString();
+                    const mlHtml  = loan.risk_label
+                        ? `<span style="font-size:11px; color:var(--text-sub); margin-left:8px;">
+                             AI Risk: <strong>${loan.risk_label.toUpperCase()}</strong>
+                             (${Math.round(loan.approval_probability * 100)}% approval)
+                           </span>`
+                        : '';
+
+                    container.innerHTML += `
+                        <div class="pipeline-item">
+                            <div>
+                                <strong style="display:block; font-size:16px;">#${loan.loan_number} – ${loan.purpose}</strong>
+                                <span style="font-size:13px; color:var(--text-sub);">₹${Number(loan.amount).toLocaleString('en-IN')} · ${loan.term_months} months · Submitted ${dateStr}</span>
+                                ${mlHtml}
+                            </div>
+                            <span class="status-badge ${badgeClass}">${badgeText}</span>
+                        </div>`;
+                });
+
+                // Update KPI active count
+                const activeEl = document.querySelectorAll('.kpi-card strong')[2];
+                if (activeEl) {
+                    const active = loans.filter(l => ['pending','under_review'].includes(l.status)).length;
+                    activeEl.textContent = `${active} Application${active !== 1 ? 's' : ''}`;
+                }
+            } catch (err) {
+                console.error('loadStatus error:', err);
+            }
+        }
+
+        // ── Load Loan History panel ───────────────────────────────────────
+        async function loadHistory() {
+            try {
+                const res  = await fetch(`${API}/loans/history.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                const tbody = document.querySelector('#history tbody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                const records = data.data.records;
+                if (!records.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-sub); padding:20px;">No history yet.</td></tr>';
+                    return;
+                }
+
+                records.forEach(loan => {
+                    const badgeClass = ['approved','disbursed','closed'].includes(loan.status)
+                        ? 'status-approved' : 'status-rejected';
+                    const badgeText  = loan.status.charAt(0).toUpperCase() + loan.status.slice(1);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>#${loan.loan_number}</td>
+                            <td>${loan.purpose}</td>
+                            <td>₹${Number(loan.amount).toLocaleString('en-IN')}</td>
+                            <td><span class="status-badge ${badgeClass}" style="padding:4px 12px; font-size:12px;">${badgeText}</span></td>
+                        </tr>`;
+                });
+            } catch (err) {
+                console.error('loadHistory error:', err);
+            }
+        }
+
+        // ── Load Notifications panel ──────────────────────────────────────
+        async function loadNotifications() {
+            try {
+                const res  = await fetch(`${API}/notifications/index.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                const container = document.querySelector('#notifications');
+                const inner     = container.querySelector('div');
+                if (!inner) return;
+                inner.innerHTML = '';
+
+                const notifs = data.data.notifications;
+                if (!notifs.length) {
+                    inner.innerHTML = '<p style="color:var(--text-sub);">No notifications.</p>';
+                    return;
+                }
+
+                notifs.forEach(n => {
+                    const colorMap = { success: '#10b981', danger: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+                    const color    = colorMap[n.type] || '#3b82f6';
+                    const date     = new Date(n.created_at).toLocaleString();
+                    inner.innerHTML += `
+                        <div style="background:#f8fafc; padding:15px 20px; border-radius:10px; border:1px solid var(--border-color); margin-bottom:10px; border-left: 3px solid ${color};">
+                            <p style="margin:0; font-size:14px; color:var(--text-main);">
+                                <strong>${n.title}</strong> — ${n.message}
+                            </p>
+                            <small style="color:var(--text-sub);">${date}</small>
+                        </div>`;
+                });
+
+                // Mark all read when panel is opened
+                fetch(`${API}/notifications/index.php?action=read_all`, {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csrf_token: csrfToken }),
+                });
+            } catch (err) {
+                console.error('loadNotifications error:', err);
+            }
+        }
+
+        // ── Loan application submit ───────────────────────────────────────
+        const applyForm = document.querySelector('#apply form');
+        if (applyForm) {
+            applyForm.removeAttribute('onsubmit');
+            applyForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const btn = this.querySelector('.btn-submit');
+                btn.disabled    = true;
+                btn.textContent = 'Submitting…';
+
+                const inputs   = this.querySelectorAll('input, select');
+                const amount   = inputs[0].value;
+                const term     = inputs[1].value;
+                const purpose  = inputs[2].value;
+                const empStat  = inputs[3].value;
+                const income   = inputs[4].value;
+
+                try {
+                    const res  = await fetch(`${API}/loans/apply.php`, {
+                        method:      'POST',
+                        credentials: 'same-origin',
+                        headers:     { 'Content-Type': 'application/json' },
+                        body:        JSON.stringify({
+                            amount, term_months: term, purpose,
+                            employment_status: empStat,
+                            annual_income: income,
+                            csrf_token: csrfToken,
+                        }),
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        showToast(`Application ${data.data.loan_number} submitted!`);
+                        applyForm.reset();
+                        loadStatus();
+                        loadHistory();
+                        loadNotifications();
+                    } else {
+                        showToast(data.message || 'Submission failed.', 'error');
+                    }
+                } catch (err) {
+                    showToast('Network error. Please try again.', 'error');
+                } finally {
+                    btn.disabled    = false;
+                    btn.textContent = 'Submit Application Portfolio';
+                }
+            });
+        }
+
+        // ── Document upload ───────────────────────────────────────────────
+        const uploadZone = document.querySelector('.upload-dropzone');
+        if (uploadZone) {
+            // Replace onclick with real file picker
+            uploadZone.removeAttribute('onclick');
+
+            // Add hidden file input
+            const fileInput     = document.createElement('input');
+            fileInput.type      = 'file';
+            fileInput.accept    = '.pdf,.jpg,.jpeg,.png';
+            fileInput.style.display = 'none';
+            uploadZone.appendChild(fileInput);
+
+            // Add doc type selector
+            const docTypeSelect = document.createElement('select');
+            docTypeSelect.style.cssText = 'margin-top:14px; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0; font-size:14px; width:auto;';
+            docTypeSelect.innerHTML = `
+                <option value="identity">Identity Document</option>
+                <option value="income">Income / Tax Statement</option>
+                <option value="property">Property Document</option>
+                <option value="other">Other</option>`;
+            uploadZone.appendChild(docTypeSelect);
+
+            uploadZone.addEventListener('click', (e) => {
+                if (e.target !== docTypeSelect) fileInput.click();
+            });
+
+            // Drag & drop
+            uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor = 'var(--primary)'; });
+            uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor = '#cbd5e1'; });
+            uploadZone.addEventListener('drop', e => {
+                e.preventDefault();
+                uploadZone.style.borderColor = '#cbd5e1';
+                if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0], docTypeSelect.value);
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files[0]) uploadFile(fileInput.files[0], docTypeSelect.value);
+            });
+        }
+
+        async function uploadFile(file, docType) {
+            const formData = new FormData();
+            formData.append('file',       file);
+            formData.append('doc_type',   docType);
+            formData.append('csrf_token', csrfToken);
+
+            showToast('Uploading…', 'success');
+
+            try {
+                const res  = await fetch(`${API}/documents/upload.php`, {
+                    method:      'POST',
+                    credentials: 'same-origin',
+                    body:        formData,
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(`"${data.data.file_name}" uploaded successfully!`);
+                    loadNotifications();
+                } else {
+                    showToast(data.message || 'Upload failed.', 'error');
+                }
+            } catch (err) {
+                showToast('Upload error. Please try again.', 'error');
+            }
+        }
+
+        // ── Settings: profile form submit ─────────────────────────────────
+        const profileForm = document.getElementById('profileForm');
+        const nameInput   = document.getElementById('settingFullName');
+
+        profileForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const formInputs = this.querySelectorAll('input');
+            const payload    = {
+                fullname:   formInputs[0].value.trim(),
+                email:      formInputs[1].value.trim(),
+                phone:      formInputs[2].value.trim(),
+                address:    formInputs[3] ? formInputs[3].value.trim() : '',
+                csrf_token: csrfToken,
+            };
+
+            try {
+                const res  = await fetch(`${API}/user/profile.php`, {
+                    method:      'POST',
+                    credentials: 'same-origin',
+                    headers:     { 'Content-Type': 'application/json' },
+                    body:        JSON.stringify(payload),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.querySelectorAll('.customer-name-bind').forEach(el => el.textContent = payload.fullname);
+                    showToast('Profile updated successfully!');
+                } else {
+                    showToast(data.message || 'Update failed.', 'error');
+                }
+            } catch (err) {
+                showToast('Network error.', 'error');
+            }
+        });
+
+        // ── Settings: password form submit ────────────────────────────────
+        const pwForm = document.querySelector('#settings .settings-section-card:nth-child(2) form');
+        if (pwForm) {
+            pwForm.removeAttribute('onsubmit');
+            pwForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const inputs = this.querySelectorAll('input[type=password]');
+                try {
+                    const res  = await fetch(`${API}/user/change_password.php`, {
+                        method:      'POST',
+                        credentials: 'same-origin',
+                        headers:     { 'Content-Type': 'application/json' },
+                        body:        JSON.stringify({
+                            current_password: inputs[0].value,
+                            new_password:     inputs[1].value,
+                            csrf_token:       csrfToken,
+                        }),
+                    });
+                    const data = await res.json();
+                    showToast(data.message, data.success ? 'success' : 'error');
+                    if (data.success) this.reset();
+                } catch (err) {
+                    showToast('Network error.', 'error');
+                }
+            });
+        }
+
+        // ── Logout ────────────────────────────────────────────────────────
+        document.querySelector('a[href="login.html"]').addEventListener('click', async function (e) {
+            e.preventDefault();
+            await fetch(`${API}/auth/logout.php`, { method: 'POST', credentials: 'same-origin' });
+            window.location.href = 'login.html';
+        });
+
+        // ── SPA navigation ────────────────────────────────────────────────
+        const menuItems  = document.querySelectorAll('.sidebar-menu .menu-item[data-target]');
+        const panels     = document.querySelectorAll('.panel-card');
+        const headerTitle = document.getElementById('current-panel-title');
+        const headerDesc  = document.getElementById('current-panel-desc');
+
+        const descriptions = {
+            profile:       "Manage your core portfolio, asset mappings, and overview metrics.",
+            apply:         "Fill out requested credentials to create an active evaluation request.",
+            upload:        "Upload financial statement transcripts and asset files for check audits.",
+            status:        "Live tracking dashboard status records regarding administrative actions.",
+            notifications: "Review alert structures sent out via compliance or evaluation hubs.",
+            history:       "Look up verified historical portfolios, account logs, and finalized loan statements.",
+            settings:      "Configure identity security preferences, authentication steps, and automated profile updates.",
+        };
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const target = this.getAttribute('data-target');
+                menuItems.forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                panels.forEach(p => p.classList.remove('active-panel'));
+                document.getElementById(target).classList.add('active-panel');
+                headerTitle.textContent = this.innerText.trim();
+                headerDesc.textContent  = descriptions[target] || '';
+
+                // Refresh data when switching to live panels
+                if (target === 'status')        loadStatus();
+                if (target === 'notifications') loadNotifications();
+                if (target === 'history')       loadHistory();
+            });
+        });
+
+        // ── Toast helper ──────────────────────────────────────────────────
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `position:fixed; bottom:24px; right:24px; padding:16px 24px;
+                border-radius:12px; background:#1e293b; color:#fff;
+                box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:9999;
+                font-family:inherit; font-weight:600; font-size:14px;
+                display:flex; align-items:center; gap:10px;
+                border-left:4px solid ${type === 'success' ? '#10b981' : '#ef4444'};`;
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            toast.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'all 0.4s ease';
+                toast.style.opacity    = '0';
+                toast.style.transform  = 'translateY(15px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // ── AI Panel ──────────────────────────────────────────────────────
+        function toggleAiPanel() {
+            document.getElementById('aiPanel').classList.toggle('open');
+        }
+
+        function sendAiMessage() {
+            const input     = document.getElementById('aiInput');
+            const container = document.getElementById('chatContainer');
+            if (!input.value.trim()) return;
+            const userBubble       = document.createElement('div');
+            userBubble.className   = 'chat-bubble user';
+            userBubble.textContent = input.value;
+            container.appendChild(userBubble);
+            const userText = input.value.toLowerCase();
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+            setTimeout(() => {
+                const aiBubble       = document.createElement('div');
+                aiBubble.className   = 'chat-bubble ai';
+                if (userText.includes('status') || userText.includes('approved')) {
+                    aiBubble.textContent = "Check your Loan Status panel on the left for live updates on all your applications.";
+                } else if (userText.includes('upload') || userText.includes('document')) {
+                    aiBubble.textContent = "Navigate to the 'Upload Documents' tab to add verification files securely.";
+                } else {
+                    aiBubble.textContent = "I can help with loan status, document uploads, and application queries. What do you need?";
+                }
+                container.appendChild(aiBubble);
+                container.scrollTop = container.scrollHeight;
+            }, 700);
+        }
+
+        // ── Start ─────────────────────────────────────────────────────────
+        boot();
+    </script>
+</body>
+</html>

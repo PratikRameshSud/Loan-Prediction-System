@@ -1,0 +1,1170 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Officer Portal - Advanced Underwriting Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Tailwind & Chart.js Engine for Data Visualization -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4f46e5; /* Premium Indigo */
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-sub: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Modern UI Layout Infrastructure */
+        .dashboard-container { 
+            display: flex; 
+            min-height: 100vh; 
+            background: #f8fafc; 
+        }
+        
+        /* Premium Officer-Dark Sidebar */
+        .sidebar { 
+            width: 280px; 
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: white; 
+            padding: 40px 24px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 35px; 
+            position: fixed; 
+            height: 100vh;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        
+        .sidebar-brand { 
+            font-size: 24px; 
+            font-weight: 800; 
+            letter-spacing: -0.75px; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sidebar-menu { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            list-style: none; 
+            padding: 0;
+            margin: 0;
+            height: 100%;
+        }
+        
+        .menu-item a { 
+            display: flex; 
+            align-items: center; 
+            gap: 14px; 
+            color: #94a3b8; 
+            text-decoration: none; 
+            padding: 14px 16px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            font-size: 15px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; 
+        }
+        
+        .menu-item.active a { 
+            color: white; 
+            background: var(--primary); 
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+        
+        .menu-item a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Main Workspace Content Area */
+        .main-content { 
+            flex: 1; 
+            padding: 45px 50px; 
+            margin-left: 280px; 
+            min-height: 100vh; 
+        }
+        
+        .dashboard-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 35px; 
+        }
+        
+        .dashboard-header h2 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-badge {
+            background: white;
+            padding: 10px 18px;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            border: 1px solid var(--border-color);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Top Right AI Interactive Trigger Button */
+        .ai-trigger-badge {
+            background: linear-gradient(135deg, #4f46e5, #3b82f6);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .ai-trigger-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Slide-out AI Panel Layout */
+        .ai-chat-panel {
+            position: fixed;
+            right: -380px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.05);
+            border-left: 1px solid var(--border-color);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+            pointer-events: none; /* Ignore pointer inputs when offscreen */
+            visibility: hidden; /* Hide entirely when offscreen to resolve focus blocks */
+        }
+        .ai-chat-panel.open {
+            right: 0;
+            pointer-events: auto; /* Active triggers */
+            visibility: visible;
+        }
+        .ai-panel-header {
+            padding: 24px;
+            background: #192231;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ai-panel-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+        .chat-bubble.ai { background: white; color: var(--text-main); border: 1px solid var(--border-color); align-self: flex-start; }
+        .chat-bubble.user { background: var(--primary); color: white; align-self: flex-end; }
+        
+        .ai-panel-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+        }
+        .ai-input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 14px;
+            outline: none;
+            pointer-events: auto !important;
+        }
+        .ai-send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* Interactive SPA Cards */
+        .panel-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 35px; 
+            box-shadow: 0 10px 25px rgba(50,50,93,0.02), 0 3px 10px rgba(0,0,0,0.01); 
+            margin-bottom: 30px; 
+            border: 1px solid rgba(227, 232, 238, 0.8);
+            display: none; 
+            animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .panel-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 0;
+        }
+        
+        .panel-card.active-panel { 
+            display: block; 
+        }
+
+        /* Overview Management Widgets */
+        .metric-bar { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 24px; 
+            margin-bottom: 35px; 
+        }
+        
+        .metric-box { 
+            background: white; 
+            padding: 24px; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+            transition: transform 0.2s ease;
+        }
+        .metric-box:hover {
+            transform: translateY(-2px);
+        }
+        .metric-box h5 { font-size: 12px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 600; }
+        .metric-box h2 { font-size: 28px; font-weight: 800; color: #0f172a; }
+        
+        /* Custom Table Design */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { background: #f8fafc; padding: 14px 20px; font-size: 13px; font-weight: 700; color: var(--text-sub); border-bottom: 1px solid var(--border-color); text-transform: uppercase; }
+        .data-table td { padding: 18px 20px; font-size: 14px; color: var(--text-main); border-bottom: 1px solid var(--border-color); }
+        
+        /* Badges & Form Styles */
+        .badge { padding: 6px 14px; border-radius: 30px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .badge-pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .badge-verified { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .badge-approved { background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0; }
+        .badge-rejected { background: #fef2f2; color: #ef4444; border: 1px solid #fca5a5; }
+        
+        .action-group { display: flex; gap: 8px; }
+        .btn-action { padding: 8px 14px; font-size: 12px; border-radius: 8px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; color: white; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-approve { background: var(--success); }
+        .btn-approve:hover { background: #1c9466; }
+        .btn-reject { background: #ef4444; }
+        .btn-reject:hover { background: #dc2626; }
+        
+        .notification-list { display: flex; flex-direction: column; gap: 14px; margin-top: 15px; }
+        .notification-item { padding: 18px 24px; border-radius: 14px; background: #f8fafc; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+
+        /* Graphics Layout Structures */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 15px; }
+        .chart-container { position: relative; width: 100%; height: 320px; margin-top: 10px; }
+
+        /* Form Layout Elements */
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            width: 100%;
+            pointer-events: auto !important;
+            position: relative;
+            z-index: 5;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            width: auto;
+            position: relative;
+            z-index: 5;
+        }
+        .btn-submit:hover { 
+            background: #3b30d8; 
+        }
+
+        /* Profile Picture Component */
+        .profile-picture-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--text-sub);
+            border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Preference Toggles */
+        .preference-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation Area matching Customer Layout Options -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fas fa-layer-group" style="color:#38bdf8"></i>
+                <span>OfficerSuite<span style="color:#38bdf8">.</span></span>
+            </div>
+            <ul class="sidebar-menu" style="display: flex; flex-direction: column; height: calc(100% - 45px);">
+                <li class="menu-item active" data-target="profile"><a><i class="fas fa-th-large"></i> Profile Overview</a></li>
+                <li class="menu-item" data-target="queue"><a><i class="fas fa-list-ul"></i> Applications Queue</a></li>
+                <li class="menu-item" data-target="analytics"><a><i class="fas fa-chart-pie"></i> Analytics Hub</a></li>
+                <li class="menu-item" data-target="documents"><a><i class="fas fa-folder-open"></i> Document Vault</a></li>
+                <li class="menu-item" data-target="status"><a><i class="fas fa-clock"></i> Audit Tracking</a></li>
+                <li class="menu-item" data-target="notifications"><a><i class="fas fa-bell"></i> Notifications</a></li>
+                <li class="menu-item" data-target="history"><a><i class="fas fa-history"></i> Decision History</a></li>
+                <li class="menu-item" data-target="settings"><a><i class="fas fa-sliders-h"></i> Settings</a></li>
+                <li class="menu-item" style="margin-top: auto;">
+                    <a href="login.html" style="color:#f87171;">
+                        <i class="fas fa-sign-out-alt"></i> Exit Portal
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Dynamic Page Display Window -->
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="current-panel-title">Profile Overview</h2>
+                    <p style="color: var(--text-sub); font-size: 15px; margin-top: 4px;" id="current-panel-desc">Overview of your assigned underwriting performance metrics and alerts.</p>
+                </div>
+                <div class="header-actions">
+                    <div class="user-badge">
+                        <div style="width: 8px; height: 8px; background: #38bdf8; border-radius: 50%;"></div>
+                        <span><i class="fas fa-user-shield"></i> <span id="headerOfficerName">Sarah Jenkins</span></span>
+                    </div>
+                    <!-- Top Right AI Assistant Badge Button -->
+                    <button class="ai-trigger-badge" onclick="toggleAiPanel()">
+                        <i class="fas fa-robot"></i> <span>Co-Pilot Chat</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Performance Management Widgets -->
+            <div class="metric-bar">
+                <div class="metric-box"><h5>Pending Underwriting</h5><h2 style="color: var(--primary);" id="metricPending">12</h2></div>
+                <div class="metric-box"><h5>Approved Today</h5><h2 style="color: var(--success);" id="metricApproved">8</h2></div>
+                <div class="metric-box"><h5>High Risk Flagged</h5><h2 style="color: #ef4444;" id="metricHighRisk">3</h2></div>
+                <div class="metric-box"><h5>Total Verified Pool</h5><h2 id="metricTotal">148</h2></div>
+            </div>
+
+            <!-- 1. PROFILE OVERVIEW PANEL -->
+            <div class="panel-card active-panel" id="profile">
+                <h3><i class="fas fa-user-circle" style="color:var(--primary);"></i> Officer Profile Summary</h3>
+                <p style="color:var(--text-main); font-size:15px; line-height:1.6;">Welcome back to the portal, <span class="officer-name-bind font-semibold">Sarah Jenkins</span>. Below are your dynamic assignments summary for this current queue period.</p>
+                <div style="margin-top: 20px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <span style="font-weight: 700; display: block; margin-bottom: 5px;">Active Region Allocation</span>
+                    <span style="color: var(--text-sub); font-size: 14px;">Domestic Commercial & Retail Lending Pipeline</span>
+                </div>
+            </div>
+
+            <!-- 2. LIVE APPLICATIONS QUEUE -->
+            <div class="panel-card" id="queue">
+                <h3><i class="fas fa-folder-open" style="color:var(--primary);"></i> Evaluation Waiting Queue</h3>
+                
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Requested Loan</th>
+                                <th>Annual Income</th>
+                                <th>Credit Score</th>
+                                <th>Documents Status</th>
+                                <th>Action Panel</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueTableBody">
+                            <tr id="row-9920">
+                                <td><strong>John Doe</strong><br><span style="font-size:11px; color:var(--text-sub)">john.doe@example.com</span></td>
+                                <td>₹35,000</td>
+                                <td>₹72,000</td>
+                                <td style="font-weight:700; color:var(--success)">750</td>
+                                <td><span class="badge badge-verified"><i class="fas fa-check"></i> 2 Files Uploaded</span></td>
+                                <td>
+                                    <div class="action-group" id="action-9920">
+                                        <button class="btn-action btn-approve" onclick="resolveApplication('9920', 'John Doe', '$35,000', 'Approve')"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="btn-action btn-reject" onclick="resolveApplication('9920', 'John Doe', '$35,000', 'Reject')"><i class="fas fa-times"></i> Reject</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="row-4399">
+                                <td><strong>Jane Smith</strong><br><span style="font-size:11px; color:var(--text-sub)">jane.smith@example.com</span></td>
+                                <td>$120,000</td>
+                                <td>$45,000</td>
+                                <td style="font-weight:700; color:#ef4444">580</td>
+                                <td><span class="badge badge-pending"><i class="fas fa-exclamation-triangle"></i> Review Needed</span></td>
+                                <td>
+                                    <div class="action-group" id="action-4399">
+                                        <button class="btn-action btn-approve" onclick="resolveApplication('4399', 'Jane Smith', '$120,000', 'Approve')"><i class="fas fa-check"></i> Approve</button>
+                                        <button class="btn-action btn-reject" onclick="resolveApplication('4399', 'Jane Smith', '$120,000', 'Reject')"><i class="fas fa-times"></i> Reject</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. ANALYTICS & CHARTS PANEL -->
+            <div class="panel-card" id="analytics">
+                <h3><i class="fas fa-chart-bar" style="color:var(--primary);"></i> Portfolio Risk Analytics</h3>
+                <div class="grid-2">
+                    <div style="border: 1px solid var(--border-color); padding: 20px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 15px; color:#0f172a;"><i class="fas fa-pie-chart"></i> Distribution Summary</h4>
+                        <div class="chart-container">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="border: 1px solid var(--border-color); padding: 20px; border-radius: 12px;">
+                        <h4 style="margin-bottom: 15px; color:#0f172a;"><i class="fas fa-line-chart"></i> Monthly Underwriting Volume</h4>
+                        <div class="chart-container">
+                            <canvas id="volumeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. DOCUMENT VAULT MANAGEMENT PANEL -->
+            <div class="panel-card" id="documents">
+                <h3><i class="fas fa-cloud-download-alt" style="color:var(--primary);"></i> Dynamic Document Audit Hub</h3>
+                <p style="color:var(--text-sub); margin-bottom:15px;">Access user submission directories currently waiting for manual asset indexing verification profiles.</p>
+                <div class="notification-item">
+                    <span><i class="far fa-file-pdf" style="color:#ef4444; margin-right:8px;"></i> John_Doe_Income_Verification.pdf</span>
+                    <button class="btn-action btn-approve" style="background:#475569;" onclick="showToast('Loading PDF archive viewer... File verified successfully!')"><i class="fas fa-eye"></i> Audit Asset</button>
+                </div>
+            </div>
+
+            <!-- 5. AUDIT LIVE TRACKING STATUS PANEL -->
+            <div class="panel-card" id="status">
+                <h3><i class="fas fa-compass" style="color:var(--primary);"></i> Queue Execution Engine</h3>
+                <div style="border: 1px solid var(--border-color); border-radius:16px; padding:25px; background:#f8fafc; margin-top:15px;">
+                    <span style="font-weight:700; font-size:15px; display:block; margin-bottom:8px;">System Performance Health Index</span>
+                    <p style="font-size:14px; color:var(--text-sub); line-height:1.5;">Automated risk compliance triggers are matching 98.4% target benchmarks. No system configuration updates needed.</p>
+                </div>
+            </div>
+
+            <!-- 6. NOTIFICATION METRICS PANEL -->
+            <div class="panel-card" id="notifications">
+                <h3><i class="fas fa-envelope-open-text" style="color:var(--primary);"></i> Inbox Center</h3>
+                <div class="notification-list">
+                    <div class="notification-item">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <i class="fas fa-exclamation-circle" style="color:#f59e0b; font-size: 18px;"></i>
+                            <span style="font-weight:600; color:var(--text-main);">Compliance notice: 3 applications flagged with borderline credit scoring indexes.</span>
+                        </div>
+                        <small style="color:var(--text-sub); font-weight:500;">1 hour ago</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. DECISION LOGS / HISTORY PAGE -->
+            <div class="panel-card" id="history">
+                <h3><i class="fas fa-history" style="color:var(--primary);"></i> Historical Decisions Audit Log</h3>
+                
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Application ID</th>
+                                <th>Applicant</th>
+                                <th>Loan Value</th>
+                                <th>Resolution Date</th>
+                                <th>Final Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td style="font-weight:700;">#LN-4412</td>
+                                <td><strong>Robert Johnson</strong><br><span style="font-size:11px; color:var(--text-sub)">robert.j@example.com</span></td>
+                                <td>$15,000</td>
+                                <td>2026-07-15</td>
+                                <td><span class="badge badge-verified"><i class="fas fa-check-circle"></i> Approved & Disbursed</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 8. HIGH-FIDELITY SETTINGS PANEL -->
+            <div class="panel-card" id="settings">
+                <h3><i class="fas fa-sliders-h" style="color:var(--primary);"></i> Portal & Profile Settings</h3>
+                <p style="color:var(--text-sub); margin-bottom: 30px; font-size: 15px;">Configure your officer signature thresholds, personal identity metrics, and security routing rules.</p>
+
+                <!-- Profile configurations section -->
+                <div class="settings-section-card border p-6 rounded-2xl mb-6 bg-white">
+                    <h4 class="text-base font-bold mb-4 flex items-center gap-2 border-b pb-2 text-slate-800">
+                        <i class="far fa-user text-indigo-600"></i> Personal Officer Details
+                    </h4>
+                    
+                    <div class="profile-picture-container">
+                        <div class="avatar-preview">
+                            <i class="fas fa-user-shield text-slate-400"></i>
+                        </div>
+                        <div>
+                            <button class="btn-avatar-upload" onclick="showToast('Upload new signature avatar simulated.');">Change Officer Avatar</button>
+                            <p style="margin: 6px 0 0 0; font-size: 11px; color: var(--text-sub);">JPG, PNG. Max size of 500K</p>
+                        </div>
+                    </div>
+
+                    <form id="officerProfileForm">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Officer Display Name</label>
+                                <input type="text" id="settingOfficerName" value="Sarah Jenkins" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Verification Code / Stamp ID</label>
+                                <input type="text" value="OFFICER-SIG-9082" disabled style="background:#f1f5f9; cursor: not-allowed;">
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>Correspondence Email</label>
+                                <input type="email" value="sarah.jenkins@creditlending.space" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Assigned Regional Desk</label>
+                                <select>
+                                    <option selected>Domestic Retail Desk</option>
+                                    <option>Commercial Accounts Desk</option>
+                                    <option>High-Risk Specialty Desk</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit" style="margin-top: 10px;">Save Profile Changes</button>
+                    </form>
+                </div>
+
+                <!-- Notification Preference Section -->
+                <div class="settings-section-card border p-6 rounded-2xl bg-white">
+                    <h4 class="text-base font-bold mb-4 flex items-center gap-2 border-b pb-2 text-slate-800">
+                        <i class="far fa-bell text-indigo-600"></i> Underwriting Dispatch Alerts
+                    </h4>
+                    
+                    <div class="preference-row">
+                        <div class="preference-info">
+                            <h5>High Risk Escalation Notifications</h5>
+                            <p>Send high importance alert when application credit scores fall below 600.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="preference-row mt-4">
+                        <div class="preference-info">
+                            <h5>Daily Settlement Summary Reports</h5>
+                            <p>Dispatch general automated ledger summaries directly to corporate compliance.</p>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI SLIDE-OUT PANEL COMPONENT -->
+    <div class="ai-chat-panel" id="aiPanel">
+        <div class="ai-panel-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-robot" style="color:#38bdf8; font-size:20px;"></i>
+                <div>
+                    <h4 style="margin:0; font-size:16px;">Underwriting Co-Pilot</h4>
+                    <span style="font-size:11px; color:#94a3b8;">Risk Model Analytics V2</span>
+                </div>
+            </div>
+            <button onclick="toggleAiPanel()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:18px;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="ai-panel-messages" id="chatContainer">
+            <div class="chat-bubble ai">Hello Officer. I am your specialized underwriting co-pilot. I can evaluate credit score weights, check uploaded tax verification profiles, or lookup high-risk flags. What criteria would you like me to inspect?</div>
+        </div>
+        <div class="ai-panel-footer">
+            <input type="text" class="ai-input" id="aiInput" placeholder="Ask Co-Pilot about risk ratios...">
+            <button class="ai-send-btn" onclick="sendAiMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- UI View Orchestration Router JavaScript -->
+    <script>
+        // ── API base ──────────────────────────────────────────────────────
+        const API = window.location.origin + window.location.pathname.replace(/\/frontend\/.*$/, '') + '/backend/api';
+        let csrfToken = '';
+        let distributionChartInstance = null;
+        let volumeChartInstance       = null;
+
+        // ── Boot ──────────────────────────────────────────────────────────
+        async function boot() {
+            try {
+                const [csrfRes, profileRes] = await Promise.all([
+                    fetch(`${API}/auth/csrf.php`,    { credentials: 'same-origin' }),
+                    fetch(`${API}/user/profile.php`, { credentials: 'same-origin' }),
+                ]);
+                const csrfData    = await csrfRes.json();
+                const profileData = await profileRes.json();
+
+                if (!profileData.success) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                if (csrfData.success) csrfToken = csrfData.data.csrf_token;
+
+                const user = profileData.data.user;
+                document.getElementById('headerOfficerName').textContent = user.fullname;
+                document.querySelectorAll('.officer-name-bind').forEach(el => el.textContent = user.fullname);
+
+                // Pre-fill settings
+                const nameInput = document.getElementById('settingOfficerName');
+                if (nameInput) nameInput.value = user.fullname;
+                const emailInput = document.querySelector('#officerProfileForm input[type=email]');
+                if (emailInput) emailInput.value = user.email;
+
+                await loadQueue();
+                loadNotifications();
+            } catch (err) {
+                console.error('Boot error:', err);
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ── Load applications queue + metrics ─────────────────────────────
+        async function loadQueue() {
+            try {
+                const res  = await fetch(`${API}/loans/queue.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                // ── Metrics ───────────────────────────────────────────────
+                const m = data.data.metrics;
+                document.getElementById('metricPending').textContent   = m.pending;
+                document.getElementById('metricApproved').textContent  = m.approved_today;
+                document.getElementById('metricHighRisk').textContent  = m.high_risk;
+                document.getElementById('metricTotal').textContent     = m.total_pool;
+
+                // ── Queue table ───────────────────────────────────────────
+                const tbody = document.getElementById('queueTableBody');
+                tbody.innerHTML = '';
+
+                const queue = data.data.queue;
+                if (!queue.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-sub);">No pending applications.</td></tr>';
+                } else {
+                    queue.forEach(loan => {
+                        const creditColor = loan.credit_score >= 700 ? 'var(--success)' : loan.credit_score >= 600 ? '#f59e0b' : '#ef4444';
+                        const docBadge    = loan.doc_count > 0
+                            ? `<span class="badge badge-verified"><i class="fas fa-check"></i> ${loan.doc_count} File${loan.doc_count > 1 ? 's' : ''}</span>`
+                            : `<span class="badge badge-pending"><i class="fas fa-exclamation-triangle"></i> No Docs</span>`;
+
+                        const mlHtml = loan.risk_label
+                            ? `<br><small style="color:${loan.risk_label==='high'?'#ef4444':loan.risk_label==='medium'?'#f59e0b':'#10b981'};">
+                                 AI Risk: <strong>${loan.risk_label.toUpperCase()}</strong>
+                                 · ${Math.round(loan.default_probability * 100)}% default prob
+                               </small>`
+                            : '';
+
+                        tbody.innerHTML += `
+                            <tr id="row-${loan.id}">
+                                <td>
+                                    <strong>${loan.customer_name}</strong><br>
+                                    <span style="font-size:11px; color:var(--text-sub)">${loan.customer_email}</span>
+                                    ${mlHtml}
+                                </td>
+                                <td>$${Number(loan.amount).toLocaleString()}</td>
+                                <td>$${Number(loan.annual_income).toLocaleString()}</td>
+                                <td style="font-weight:700; color:${creditColor}">${loan.credit_score}</td>
+                                <td>${docBadge}</td>
+                                <td>
+                                    <div class="action-group" id="action-${loan.id}">
+                                        <button class="btn-action btn-approve"
+                                            onclick="resolveApplication(${loan.id}, '${loan.customer_name}', '$${Number(loan.amount).toLocaleString()}', 'approved')">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn-action btn-reject"
+                                            onclick="resolveApplication(${loan.id}, '${loan.customer_name}', '$${Number(loan.amount).toLocaleString()}', 'rejected')">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                // Store chart data for when analytics tab opens
+                window._chartData = { monthly: data.data.monthly, dist: data.data.distribution };
+
+            } catch (err) {
+                console.error('loadQueue error:', err);
+            }
+        }
+
+        // ── Approve / Reject ──────────────────────────────────────────────
+        async function resolveApplication(loanId, name, amount, decision) {
+            const actionCell = document.getElementById(`action-${loanId}`);
+            if (actionCell) {
+                actionCell.innerHTML = '<span style="color:var(--text-sub); font-size:13px;">Processing…</span>';
+            }
+
+            try {
+                const res  = await fetch(`${API}/loans/decide.php`, {
+                    method:      'POST',
+                    credentials: 'same-origin',
+                    headers:     { 'Content-Type': 'application/json' },
+                    body:        JSON.stringify({ loan_id: loanId, decision, csrf_token: csrfToken }),
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(`${name} – Application ${decision}!`, decision === 'approved' ? 'success' : 'danger');
+
+                    if (actionCell) {
+                        const badgeClass = decision === 'approved' ? 'badge-approved' : 'badge-rejected';
+                        actionCell.innerHTML = `<span class="badge ${badgeClass}"><i class="fas fa-${decision==='approved'?'check':'ban'}"></i> ${decision.charAt(0).toUpperCase()+decision.slice(1)}</span>`;
+                    }
+
+                    // Refresh metrics and history
+                    loadQueue();
+                    loadHistory();
+                    loadNotifications();
+                } else {
+                    showToast(data.message || 'Action failed.', 'danger');
+                    if (actionCell) {
+                        actionCell.innerHTML = `
+                            <button class="btn-action btn-approve" onclick="resolveApplication(${loanId},'${name}','${amount}','approved')"><i class="fas fa-check"></i> Approve</button>
+                            <button class="btn-action btn-reject"  onclick="resolveApplication(${loanId},'${name}','${amount}','rejected')"><i class="fas fa-times"></i> Reject</button>`;
+                    }
+                }
+            } catch (err) {
+                showToast('Network error.', 'danger');
+            }
+        }
+
+        // ── Load Decision History ─────────────────────────────────────────
+        async function loadHistory() {
+            try {
+                const res  = await fetch(`${API}/loans/history.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                const tbody = document.getElementById('historyTableBody');
+                tbody.innerHTML = '';
+                const records = data.data.records;
+
+                if (!records.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-sub);">No decisions yet.</td></tr>';
+                    return;
+                }
+
+                records.forEach(loan => {
+                    const badgeClass = loan.status === 'approved' ? 'badge-approved' : 'badge-rejected';
+                    const date       = new Date(loan.updated_at).toLocaleDateString();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="font-weight:700;">#${loan.loan_number}</td>
+                            <td><strong>${loan.customer_name}</strong><br>
+                                <span style="font-size:11px; color:var(--text-sub)">${loan.customer_email}</span></td>
+                            <td>$${Number(loan.amount).toLocaleString()}</td>
+                            <td>${date}</td>
+                            <td><span class="badge ${badgeClass}">
+                                <i class="fas fa-${loan.status==='approved'?'check-circle':'ban'}"></i>
+                                ${loan.status.charAt(0).toUpperCase()+loan.status.slice(1)}
+                            </span></td>
+                        </tr>`;
+                });
+            } catch (err) {
+                console.error('loadHistory error:', err);
+            }
+        }
+
+        // ── Load Notifications ────────────────────────────────────────────
+        async function loadNotifications() {
+            try {
+                const res  = await fetch(`${API}/notifications/index.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                const list = document.querySelector('#notifications .notification-list');
+                if (!list) return;
+                list.innerHTML = '';
+
+                const notifs = data.data.notifications;
+                if (!notifs.length) {
+                    list.innerHTML = '<p style="color:var(--text-sub);">No notifications.</p>';
+                    return;
+                }
+
+                const colorMap = { success:'#10b981', danger:'#ef4444', warning:'#f59e0b', info:'#3b82f6' };
+                notifs.forEach(n => {
+                    const color = colorMap[n.type] || '#3b82f6';
+                    const date  = new Date(n.created_at).toLocaleString();
+                    list.innerHTML += `
+                        <div class="notification-item" style="border-left:3px solid ${color}">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <i class="fas fa-bell" style="color:${color}; font-size:18px;"></i>
+                                <span style="font-weight:600; color:var(--text-main);">${n.title} — ${n.message}</span>
+                            </div>
+                            <small style="color:var(--text-sub); font-weight:500;">${date}</small>
+                        </div>`;
+                });
+
+                fetch(`${API}/notifications/index.php?action=read_all`, {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ csrf_token: csrfToken }),
+                });
+            } catch (err) {
+                console.error('loadNotifications error:', err);
+            }
+        }
+
+        // ── Render analytics charts ───────────────────────────────────────
+        function renderCharts() {
+            const cd = window._chartData;
+            if (!cd) return;
+
+            const ctxDist = document.getElementById('distributionChart').getContext('2d');
+            const ctxVol  = document.getElementById('volumeChart').getContext('2d');
+
+            if (distributionChartInstance) distributionChartInstance.destroy();
+            if (volumeChartInstance)       volumeChartInstance.destroy();
+
+            // Status distribution
+            const distLabels = cd.dist.map(d => d.status.charAt(0).toUpperCase()+d.status.slice(1));
+            const distData   = cd.dist.map(d => parseInt(d.total));
+            const distColors = cd.dist.map(d => ({
+                approved:'#10b981', rejected:'#ef4444', pending:'#f59e0b',
+                under_review:'#3b82f6', disbursed:'#6366f1', closed:'#94a3b8'
+            }[d.status] || '#94a3b8'));
+
+            distributionChartInstance = new Chart(ctxDist, {
+                type: 'doughnut',
+                data: { labels: distLabels, datasets: [{ data: distData, backgroundColor: distColors, borderWidth: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false },
+            });
+
+            // Monthly volume
+            const volLabels = cd.monthly.map(m => m.month);
+            const volData   = cd.monthly.map(m => parseInt(m.total));
+
+            volumeChartInstance = new Chart(ctxVol, {
+                type: 'bar',
+                data: {
+                    labels: volLabels,
+                    datasets: [{ label: 'Applications', data: volData, backgroundColor: '#4f46e5', borderRadius: 6 }],
+                },
+                options: { responsive: true, maintainAspectRatio: false },
+            });
+        }
+
+        // ── Settings: profile form ────────────────────────────────────────
+        document.getElementById('officerProfileForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const inputs  = this.querySelectorAll('input:not([disabled]), select');
+            const payload = {
+                fullname:   inputs[0].value.trim(),
+                email:      inputs[1].value.trim(),
+                phone:      '',
+                address:    '',
+                csrf_token: csrfToken,
+            };
+            try {
+                const res  = await fetch(`${API}/user/profile.php`, {
+                    method:      'POST',
+                    credentials: 'same-origin',
+                    headers:     { 'Content-Type': 'application/json' },
+                    body:        JSON.stringify(payload),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('headerOfficerName').textContent = payload.fullname;
+                    document.querySelectorAll('.officer-name-bind').forEach(el => el.textContent = payload.fullname);
+                    showToast('Profile updated successfully!');
+                } else {
+                    showToast(data.message || 'Update failed.', 'danger');
+                }
+            } catch (err) {
+                showToast('Network error.', 'danger');
+            }
+        });
+
+        // ── Logout ────────────────────────────────────────────────────────
+        document.querySelector('a[href="login.html"]').addEventListener('click', async function (e) {
+            e.preventDefault();
+            await fetch(`${API}/auth/logout.php`, { method: 'POST', credentials: 'same-origin' });
+            window.location.href = 'login.html';
+        });
+
+        // ── SPA navigation ────────────────────────────────────────────────
+        const menuItems   = document.querySelectorAll('.sidebar-menu .menu-item[data-target]');
+        const panels      = document.querySelectorAll('.panel-card');
+        const headerTitle = document.getElementById('current-panel-title');
+        const headerDesc  = document.getElementById('current-panel-desc');
+
+        const descriptions = {
+            profile:       "Overview of your assigned underwriting performance metrics and alerts.",
+            queue:         "Review active customer metrics, evaluate validation data, and manage risk queues.",
+            analytics:     "Review interactive graphical trend maps and analytical breakdowns.",
+            documents:     "Access user submission directories currently waiting for manual asset indexing.",
+            status:        "Real-time verification system processing tracks and compliance loops.",
+            notifications: "Stay updated on recent system logs and compliance flags.",
+            history:       "Look up verified historical portfolios, archival account allocations, and audit determinations.",
+            settings:      "Configure administrative security controls and signing identities.",
+        };
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', function () {
+                const target = this.getAttribute('data-target');
+                menuItems.forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+                panels.forEach(p => p.classList.remove('active-panel'));
+                document.getElementById(target).classList.add('active-panel');
+                headerTitle.textContent = this.innerText.trim();
+                headerDesc.textContent  = descriptions[target] || '';
+
+                if (target === 'analytics')     renderCharts();
+                if (target === 'queue')         loadQueue();
+                if (target === 'history')       loadHistory();
+                if (target === 'notifications') loadNotifications();
+            });
+        });
+
+        // ── Toast ─────────────────────────────────────────────────────────
+        function showToast(message, type = 'success') {
+            const accent = type === 'success' ? '#10b981' : '#ef4444';
+            const icon   = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            const toast  = document.createElement('div');
+            toast.style.cssText = `position:fixed; bottom:24px; right:24px; padding:16px 24px;
+                border-radius:12px; background:#1e293b; color:#fff;
+                box-shadow:0 10px 25px rgba(0,0,0,0.15); z-index:9999;
+                font-family:inherit; font-weight:600; font-size:14px;
+                display:flex; align-items:center; gap:10px;
+                border-left:4px solid ${accent};`;
+            toast.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.transition = 'all 0.4s ease';
+                toast.style.opacity    = '0';
+                toast.style.transform  = 'translateY(15px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // ── AI Panel ──────────────────────────────────────────────────────
+        function toggleAiPanel() {
+            document.getElementById('aiPanel').classList.toggle('open');
+        }
+
+        function sendAiMessage() {
+            const input     = document.getElementById('aiInput');
+            const container = document.getElementById('chatContainer');
+            if (!input.value.trim()) return;
+            const userBubble       = document.createElement('div');
+            userBubble.className   = 'chat-bubble user';
+            userBubble.textContent = input.value;
+            container.appendChild(userBubble);
+            const userText = input.value.toLowerCase();
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+            setTimeout(() => {
+                const aiBubble     = document.createElement('div');
+                aiBubble.className = 'chat-bubble ai';
+                if (userText.includes('score') || userText.includes('risk')) {
+                    aiBubble.textContent = "Applications with credit scores below 600 are automatically flagged as high risk. Check the AI Risk column in the queue.";
+                } else if (userText.includes('approve') || userText.includes('reject')) {
+                    aiBubble.textContent = "Use the Approve/Reject buttons in the Applications Queue. Decisions are logged and the customer is notified instantly.";
+                } else {
+                    aiBubble.textContent = "I can assist with risk analysis, queue management, and document verification queries.";
+                }
+                container.appendChild(aiBubble);
+                container.scrollTop = container.scrollHeight;
+            }, 700);
+        }
+
+        // ── Load documents for officer vault ─────────────────────────────
+        async function loadDocuments() {
+            try {
+                const res  = await fetch(`${API}/documents/list.php`, { credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.success) return;
+
+                const panel = document.querySelector('#documents');
+                // find the container after the <p>
+                let container = panel.querySelector('.notification-item')?.parentElement;
+                if (!container) return;
+                container.innerHTML = '';
+
+                const docs = data.data.documents;
+                if (!docs.length) {
+                    container.innerHTML = '<p style="color:var(--text-sub);">No documents uploaded yet.</p>';
+                    return;
+                }
+
+                docs.forEach(doc => {
+                    const icon  = doc.file_type === 'application/pdf' ? 'fa-file-pdf' : 'fa-file-image';
+                    const color = doc.file_type === 'application/pdf' ? '#ef4444' : '#3b82f6';
+                    const verifiedBadge = doc.verified
+                        ? '<span class="badge badge-verified" style="margin-left:8px;"><i class="fas fa-check"></i> Verified</span>'
+                        : '<span class="badge badge-pending"  style="margin-left:8px;"><i class="fas fa-clock"></i> Pending</span>';
+                    container.innerHTML += `
+                        <div class="notification-item" style="margin-bottom:10px;">
+                            <span>
+                                <i class="far ${icon}" style="color:${color}; margin-right:8px;"></i>
+                                <strong>${doc.customer_name}</strong> — ${doc.file_name}
+                                ${verifiedBadge}
+                                <br><small style="color:var(--text-sub);">${doc.loan_number || 'No loan linked'} · ${new Date(doc.uploaded_at).toLocaleDateString()}</small>
+                            </span>
+                            <a href="../backend/api/documents/download.php?id=${doc.id}" target="_blank"
+                               class="btn-action btn-approve" style="background:#475569;">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </div>`;
+                });
+            } catch (err) {
+                console.error('loadDocuments error:', err);
+            }
+        }
+
+        // Hook documents tab
+        menuItems.forEach(item => {
+            if (item.getAttribute('data-target') === 'documents') {
+                item.addEventListener('click', loadDocuments);
+            }
+        });
+
+        // ── Start ─────────────────────────────────────────────────────────
+        boot();
+    </script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+/* ==========================================================================
+   1. Core Styling Variables & Reset
+   ========================================================================== */
+:root {
+    --primary: #2e3b8d; /* Professional Bank Indigo */
+    --accent: #5e6dc7;
+    --text-main: #1a1f36;
+    --text-sub: #697386;
+    --border-color: #e3e8ee;
+    --background-flat: #f7fafc;
+    --success: #24b47e;
+    --card-shadow: 0 15px 35px rgba(50, 50, 93, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background: var(--background-flat);
+    min-height: 100vh;
+}
+
+.main-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* ==========================================================================
+   2. Attractive Two-Column Layout Card
+   ========================================================================== */
+.portal-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    overflow: hidden;
+    animation: slideUpFade 0.6s ease;
+}
+
+/* Left Branding Side Panel - Using your image path and removing blue color */
+.branding-panel {
+    position: relative;
+    background-image: url('image/home.png'); /* <-- Updated to your specific file path */
+    background-size: cover;
+    background-position: center;
+    padding: 60px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    color: white;
+    z-index: 1;
+}
+
+/* Dark Overlay Mask to ensure text legibility over the custom background image */
+.branding-panel .overlay {
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background: rgba(20, 24, 33, 0.8); /* Dark tint matching the environment of the photo */
+    z-index: -1;
+}
+
+.branding-content {
+    max-width: 400px;
+}
+
+.main-icon {
+    font-size: 50px;
+    margin-bottom: 25px;
+    color: #e3e8ee;
+    opacity: 0.9;
+}
+
+.brand-title {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 10px;
+    line-height: 1;
+}
+
+.brand-title .dot {
+    color: var(--accent);
+}
+
+.brand-tagline {
+    font-size: 16px;
+    opacity: 0.8;
+    line-height: 1.5;
+}
+
+/* Right Form Side Panel */
+.form-panel {
+    padding: 60px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Custom Scrollbar for extended forms (Registration) */
+.scrolling-panel {
+    max-height: 85vh;
+    overflow-y: auto;
+    padding-right: 20px;
+}
+
+.scrolling-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrolling-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrolling-panel::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.scrolling-panel::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ==========================================================================
+   3. Typography and Form Elements
+   ========================================================================== */
+.form-header {
+    margin-bottom: 35px;
+}
+
+.form-header h2 {
+    color: var(--text-main);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.form-header .subtitle {
+    color: var(--text-sub);
+    font-size: 15px;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.form-group label i {
+    color: var(--accent);
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background-color: white;
+    outline: none;
+    transition: all 0.2s ease;
+    color: var(--text-main);
+}
+
+.form-group input::placeholder {
+    color: #a3acb9;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(94, 109, 199, 0.15);
+}
+
+/* Helper Utilities (Forgot Password Row) */
+.form-options {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -10px;
+    margin-bottom: 25px;
+}
+
+.helper-link {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.helper-link:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   4. Dynamic Privacy / Administrative Parameters
+   ========================================================================== */
+.security-field {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-bottom: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.security-field.visible {
+    max-height: 140px;
+    opacity: 1;
+    margin-bottom: 22px;
+}
+
+.highlight-label {
+    color: #d9480f !important;
+}
+
+.help-text {
+    display: block;
+    color: #868e96;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+/* ==========================================================================
+   5. Buttons & Action Links
+   ========================================================================== */
+.btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: -0.2px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.btn-primary:hover {
+    background: var(--text-main);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-success {
+    background: var(--success);
+    color: #fff;
+    box-shadow: 0 4px 6px rgba(36, 180, 126, 0.15);
+}
+
+.btn-success:hover {
+    background: #1c9466;
+    transform: translateY(-1px);
+    box-shadow: 0 7px 14px rgba(36, 180, 126, 0.2);
+}
+
+.btn-block {
+    width: 100%;
+    padding: 14px;
+}
+
+.effect-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Form Switching Footer Link */
+.form-footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-sub);
+}
+
+.switch-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.switch-link:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   6. Alerts and Animations
+   ========================================================================== */
+.alert-container {
+    margin-bottom: 20px;
+}
+
+.alert { 
+    padding: 12px; 
+    border-radius: 8px; 
+    font-size: 14px; 
+}
+
+.alert-danger { 
+    background: #fee2e2; 
+    color: #991b1b; 
+}
+
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   7. Responsive Design Media Rules
+   ========================================================================== */
+@media (max-width: 800px) {
+    .portal-card {
+        grid-template-columns: 1fr;
+    }
+    .branding-panel {
+        display: none;
+    }
+    .form-panel {
+        padding: 40px 30px;
+    }
+}
